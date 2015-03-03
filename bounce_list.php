@@ -1,7 +1,6 @@
 <?php
 init();
 $save_file='C:\Users\hanshenrik\AppData\Roaming\Onlink\users\newcharalias.db';
-
 $save_file=str_replace("\\",'/',$save_file);//dont ask
 $dbc=new PDO('sqlite:'.$save_file,'','',array(
 PDO::ATTR_EMULATE_PREPARES => false, 
@@ -23,7 +22,6 @@ echo "done.".PHP_EOL;
 echo "finding internic's IP... ";
 $PDOStatementH=$dbc->prepare("SELECT `ip`,`key` FROM `computer` WHERE `key` LIKE ?");
 $PDOStatementH->execute(array("InterNIC"));
-
 //$rows=$PDOStatementH->rowCount();
 //assert(1===$rows,'expected 1, found '.$rows.' internic\'s...');
 $ip=$PDOStatementH->fetch(PDO::FETCH_ASSOC)['ip'];
@@ -37,28 +35,28 @@ assert($HideStatement->rowCount()===1);
 ++$ListKey;
 echo "done.".PHP_EOL;
 unset($ip);
-echo "Adding every server with the name Public Access to your saved connection list.".PHP_EOL;
-$PDOStatementH->execute(array("%Public Access%"));
-while(false!==($row=$PDOStatementH->fetch(PDO::FETCH_ASSOC))){
-	echo "Adding ".$row['key']." (".$row['ip'].")".PHP_EOL;
-	$AddToListStatement->execute(array($row['ip'],$ListKey,'0(worldmap)'));
-	$HideStatement->execute(array('0',$row['ip']));
-	assert($HideStatement->rowCount()===1);
-	++$ListKey;
-}
-echo "...done.".PHP_EOL;
-echo "Adding every server with the name Access Terminal to your saved connection list.".PHP_EOL;
-$PDOStatementH->execute(array("%Access Terminal%"));
-while(false!==($row=$PDOStatementH->fetch(PDO::FETCH_ASSOC))){
-	echo "Adding ".$row['key']." (".$row['ip'].")".PHP_EOL;
-	$AddToListStatement->execute(array($row['ip'],$ListKey,'0(worldmap)'));
-	$HideStatement->execute(array('0',$row['ip']));
+
+echo "getting a list of every server with the name Public Access or Access Terminal...";
+$res=$dbc->query('
+SELECT `computer`,`ip`,`x`,`y` from `vlocation` WHERE `computer` LIKE \'%Public Access%\' OR `computer` LIKE \'%Access Terminal%\';
+');
+$res=$res->fetchAll(PDO::FETCH_ASSOC);
+echo "found ".count($res,COUNT_NORMAL)." servers. done.".PHP_EOL;
+echo "sorting servers based X/Y nearest server...";
+$sorted_res=sort_by_xy_distance($res);
+unset($res);
+echo "done.".PHP_EOL;
+//var_dump($sorted_res);die();
+foreach($sorted_res as $server){
+	echo "Adding ".$server['computer']." (".$server['ip'].")".PHP_EOL;
+	$AddToListStatement->execute(array($server['ip'],$ListKey,'0(worldmap)'));
+	assert($AddToListStatement->rowCount()===1);
+	$HideStatement->execute(array('0',$server['ip']));
 	assert($HideStatement->rowCount()===1);
 	++$ListKey;
 }
 echo "...done".PHP_EOL;
-echo "all finished. added ".$ListKey." servers in total.";
-die();
+echo "all finished. added ".$ListKey." servers in total.".PHP_EOL;
 
 
 function init(){
@@ -72,5 +70,41 @@ function exception_error_handler($errno, $errstr, $errfile, $errline ) {
     }
     throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
 }
-
-
+function sort_by_xy_distance($input_list)
+{
+    $ret = array();
+    $a = $input_list[0];
+    array_push($ret, $input_list[0]);
+    $input_list[0] = null;
+    $i = 1;
+    for ($i = 1; $i < count($input_list); ++$i) {
+        // if ($input_list[$i] == null) {
+            // echo 'already added to list..';
+            // continue;
+        // }
+        $ii = 1;
+        $tmpdistance = 0;
+        $nearest = array(
+            'index' => -1,
+            'distance' => PHP_INT_MAX
+        );
+        for ($ii = 1; $ii < count($input_list); ++$ii) {
+            if ($input_list[$ii] == null || $ii == $i) {
+                //echo 'already added to list..';
+                continue;
+            }
+            $tmpdistance = abs($input_list[$ii]['x'] - $a['x']) + abs($input_list[$ii]['y'] - $a['y']);
+			//$tmpdistance=hypot($input_list[$ii]['x'] - $a['x'] ,$input_list[$ii]['y'] - $a['y'] );
+			//$tmpdistance=hypot(($input_list[$ii]['y'] - $input_list[$ii]['x']), ($a['y'] - $a['x']));
+            if ($tmpdistance < $nearest['distance']) {
+                $nearest['index'] = $ii;
+                $nearest['distance'] = $tmpdistance;
+            }
+        }
+        assert($nearest['index'] != -1);
+        array_push($ret, $input_list[$nearest['index']]);
+        $a = $input_list[$nearest['index']];
+        $input_list[$nearest['index']] = null;
+    }
+    return $ret;
+}
