@@ -1,12 +1,13 @@
 <?php
+declare(strict_types=1);
 init();
-
-$save_file='C:\Users\hanshenrik\AppData\Roaming\Onlink\users\Kira.db';
+$save_file='C:\Users\aa\AppData\Roaming\Onlink\users\kira.db';
 $save_file=str_replace("\\",'/',$save_file);//dont ask
 $dbc=new PDO('sqlite:'.$save_file,'','',array(
 PDO::ATTR_EMULATE_PREPARES => false, 
 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
 ));
+$dbc->beginTransaction();
 echo "erasing your saved connection list.. ";
 $PDOStatementH=$dbc->prepare("DELETE FROM `saved-connection` WHERE 1");
 $PDOStatementH->execute();
@@ -38,7 +39,7 @@ echo "done.".PHP_EOL;
 unset($ip);
 echo "getting a list of every server with the name Public Access or Access Terminal...";
 $res=$dbc->query('
-SELECT `computer`,`ip`,`x`,`y` from `vlocation` WHERE `computer` LIKE \'%Public Access%\' OR `computer` LIKE \'%Access Terminal%\'
+SELECT `computer`,`ip`,`x`,`y` FROM `vlocation` WHERE `computer` LIKE \'%Public Access%\' OR `computer` LIKE \'%Access Terminal%\'
 ;
 ');
 $res=$res->fetchAll(PDO::FETCH_ASSOC);
@@ -57,23 +58,20 @@ foreach($sorted_res as $server){
 	assert($HideStatement->rowCount()===1);
 	++$ListKey;
 }
-echo "...done".PHP_EOL;
+echo "...done, commiting..".PHP_EOL;
+$dbc->commit();
 echo "all finished. added ".$ListKey." servers in total.".PHP_EOL;
-
 
 function init(){
 error_reporting(E_ALL);
 set_error_handler("exception_error_handler");
-	ini_set("log_errors",true);
-	ini_set("display_errors",true);
-	ini_set("log_errors_max_len",0);
+	ini_set("log_errors",'1');
+	ini_set("display_errors",'1');
+	ini_set("log_errors_max_len",'0');
 	ini_set("error_prepend_string",'<error>');
 	ini_set("error_append_string",'</error>'.PHP_EOL);
 	ini_set("error_log",__DIR__.'/error_log.php');	
 }
-
-
-
 function exception_error_handler($errno, $errstr, $errfile, $errline ) {
     if (!(error_reporting() & $errno)) {
         // This error code is not included in error_reporting
@@ -81,7 +79,7 @@ function exception_error_handler($errno, $errstr, $errfile, $errline ) {
     }
     throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
 }
-function sort_by_xy_distance($input_list)
+function sort_by_xy_distance(array $input_list)
 {
     $ret = array();
     $a = $input_list[0];
@@ -118,8 +116,7 @@ function sort_by_xy_distance($input_list)
     }
     return $ret;
 }
-
-function calculate_total_xy_distance($input_list){
+function calculate_total_xy_distance(array $input_list){
 	$ret=0;
 	$startX=$input_list[0]['x'];
 	$startY=$input_list[0]['y'];
@@ -132,9 +129,8 @@ function calculate_total_xy_distance($input_list){
 		}
 		return $ret;
 }
-
 //warning: probably will use a lot of ram..
-function generate_list_for_dijkstra($input_list){
+function generate_list_for_dijkstra(array $input_list){
 /*
 $graph_array = array(
                     array("a", "b", 7),
@@ -162,10 +158,7 @@ $graph_array = array(
 	}
 	return $ret;
 	}
-
-
  
-
 function dijkstra($graph_array, $source, $target) {
     $vertices = array();
     $neighbours = array();
