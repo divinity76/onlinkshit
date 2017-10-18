@@ -1,12 +1,18 @@
 <?php
 declare(strict_types = 1);
 init ();
-$save_file = 'C:\Users\aa\AppData\Roaming\Onlink\users\kira.db';
-$save_file = str_replace ( "\\", '/', $save_file ); // dont ask
-$dbc = new PDO ( 'sqlite:' . $save_file, '', '', array (
+$save_file = 'C:\Users\aa\AppData\Roaming\Onlink\users\Kenway.db';
+$save_file = str_replace ( '\\', '/', $save_file );
+$opts = array (
 		PDO::ATTR_EMULATE_PREPARES => false,
 		PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION 
-) );
+);
+try {
+	$dbc = new PDO ( 'sqlite:' . $save_file, '', '', $opts );
+} catch ( Exception $ex ) {
+	// workaround a weird sqlite3 cygwin bug...
+	$dbc = new PDO ( 'sqlite:/cygdrive/' . str_replace ( ':', '', $save_file ), '', '', $opts );
+}
 $dbc->beginTransaction ();
 echo "erasing your saved connection list.. ";
 $PDOStatementH = $dbc->prepare ( "DELETE FROM `saved-connection` WHERE 1" );
