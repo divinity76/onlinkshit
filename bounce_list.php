@@ -1,18 +1,7 @@
 <?php
 declare(strict_types = 1);
 init ();
-$save_file = 'C:\Users\aa\AppData\Roaming\Onlink\users\Kenway.db';
-$save_file = str_replace ( '\\', '/', $save_file );
-$opts = array (
-		PDO::ATTR_EMULATE_PREPARES => false,
-		PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION 
-);
-try {
-	$dbc = new PDO ( 'sqlite:' . $save_file, '', '', $opts );
-} catch ( Exception $ex ) {
-	// workaround a weird sqlite3 cygwin bug...
-	$dbc = new PDO ( 'sqlite:/cygdrive/' . str_replace ( ':', '', $save_file ), '', '', $opts );
-}
+$dbc = getSave ();
 $dbc->beginTransaction ();
 echo "erasing your saved connection list.. ";
 $PDOStatementH = $dbc->prepare ( "DELETE FROM `saved-connection` WHERE 1" );
@@ -84,6 +73,67 @@ foreach ( $sorted_res as $server ) {
 echo "...done, commiting.." . PHP_EOL;
 $dbc->commit ();
 echo "all finished. added " . $ListKey . " servers in total." . PHP_EOL;
+function getSave(): \PDO {
+	global $argc, $argv;
+	$dir = getenv ( "APPDATA" ) . "/Onlink/users";
+	$dir = strtr ( $dir, array (
+			'\\' => '/' 
+	) );
+	if (is_dir ( $dir )) {
+		// windows
+	} else {
+		$dir = getenv ( "HOME" ) . "/.onlink/users";
+		$dir = strtr ( $dir, array (
+				'\\' => '/' 
+		) );
+		if (is_dir ( $dir )) {
+			// linux
+		} else {
+			die ( "error: cannot find the onlink user folder! (and there are only 2 dirs i'm coded to check, ~/.onlink/users  and %appdata%\Onlink\users )" );
+		}
+	}
+	$files = glob ( "$dir/*.db", GLOB_NOESCAPE );
+	if (empty ( $files )) {
+		die ( "0 agents found!" );
+	}
+	$agents = [ ];
+	foreach ( $files as $file ) {
+		$agents [strtolower ( basename ( $file, ".db" ) )] = $file;
+	}
+	if ($argc === 1) {
+		echo count ( $agents ) . " agent(s) were found: \n";
+		$i = 0;
+		foreach ( $agents as $agent => $unused ) {
+			++ $i;
+			echo "$i: $agent\n";
+		}
+		echo "you can pick an agent based on the name, or by agent number.\n";
+		die ();
+	} elseif ($argc === 2) {
+		$target = strtolower ( basename ( trim ( $argv [1] ) ) );
+		$i = 0;
+		foreach ( $agents as $agent => $file ) {
+			++ $i;
+			if ($i == $target || $agent == $target) {
+				// found target!
+				$opts = array (
+						PDO::ATTR_EMULATE_PREPARES => false,
+						PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION 
+				);
+				try {
+					$dbc = new PDO ( 'sqlite:' . $file, '', '', $opts );
+				} catch ( Exception $ex ) {
+					// workaround a weird sqlite3 cygwin bug...
+					$dbc = new PDO ( 'sqlite:/cygdrive/' . str_replace ( ':', '', $file ), '', '', $opts );
+				}
+				return $dbc;
+			}
+		}
+		die ( "error: agent \"$target\" not found!" );
+	} else {
+		die ( "only 0-1 arguments are supported, but " . ($argc - 1) . " given!" );
+	}
+}
 function init() {
 	error_reporting ( E_ALL );
 	set_error_handler ( "exception_error_handler" );
