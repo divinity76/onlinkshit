@@ -73,7 +73,7 @@ EndFunc
 Func WriteTransferMoney()
    Local $aResult, $iRows, $iColumns;
    local $connectedIp;
-   Send("{tab}" & _StringRepeat("{BACKSPACE}",15) & "waiting for db flush, hold on...");
+   Send("{tab}" & _StringRepeat("{BACKSPACE}",30) & "waiting for db flush, hold on...");
    Do
 	  sleep(100);
 	  e_SQLite_GetTable2d($db, 'SELECT remotehost FROM player LIMIT 1', $aResult, $iRows, $iColumns) ;
