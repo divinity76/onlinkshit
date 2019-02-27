@@ -12,7 +12,7 @@
 
 HotKeySet("{PGUP}","WriteTransferMoney");
 HotKeySet("{PGDN}","ParseBankLogs");
-
+HotKeySet("{END}","RunProgramsOnAccessControlServer"); i'm just making up these hotkeys as i need em, there's no logic to it.
 Func Paste()
    Sleep(2*1000);
    Send(ClipGet());
@@ -139,8 +139,66 @@ Func ParseBankLogs()
    Beep();
 EndFunc
 
+Func RunProgramsOnAccessControlServer()
+   ; Denial is not included.
+   Local $args=[ _
+	  "run File_Copier", _
+	  "run Proxy_Killer", _
+	  "run Firewall_Bypass", _
+	  "run Password_Breaker", _
+	  "run Decypher", _
+	  "run B.Monitor_Killer", _
+	  "run File_Deleter", _
+	  "run Log_Deleter", _
+	  "run Sentry_Bypass", _
+	  "run Encryption_Bypass", _
+	  "run Proxy_Bypass", _
+	  "run Gateway_Nuke", _
+	  "run Motion_Sensor", _
+	  "run Defrag", _
+	  "run Decrypter", _
+	  "run Encrypter", _
+	  "run PC_AdminMenuInject", _
+	  "run PC_ConsoleEnable", _
+	  "run PC_LoginEnable", _
+	  "run PC_MainMenuInject", _
+	  "run PC_md2Crack", _
+	  "run PC_md4Crack", _
+	  "run PC_md5Crack", _
+	  "run PC_SHA-512Crack", _
+	  "run B.Monitor_Bypass", _
+	  "run Compressor", _
+	  "run Decompressor", _
+	  "run Encrypter", _
+	  "run LAN_Agent", _
+	  "run Log_UnDeleter", _
+	  "run Voice_Analyser", _
+	  "run IP_Lookup", _
+	  "run IP_Probe", _
+	  "run LAN_Probe", _
+	  "run LAN_Scan", _
+	  "run LAN_Spoof", _
+	  "run LAN_Force", _
+	  "run Trace_Tracker", _
+	  "run Monitor_Bypass", _
+	  "run LAN_Spike", _
+	  "run VDPIN_Cracker", _
+	  "run Encryption_Killer", _
+	  "run Firewall_Killer", _
+	  "run Sentry_Killer", _
+	  "run Log_Modifier" _
+   ];
+   Local $iMax = UBound($args)
+   Send("dir{ENTER}");
+   Sleep(200);
+   For $i = 0 to $iMax - 1;
+	  Send($args[$i] & "{ENTER}");
+	  sleep(60);
+   Next
+EndFunc
+
+
 init();
 While 1
    Sleep(100);
 WEnd
-
