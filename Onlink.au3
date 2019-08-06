@@ -14,7 +14,7 @@ HotKeySet("{PGUP}","WriteTransferMoney");
 HotKeySet("{PGDN}","ParseBankLogs");
 HotKeySet("{END}","RunProgramsOnAccessControlServer"); i'm just making up these hotkeys as i need em, there's no logic to it.
 Func Paste()
-   Sleep(2*1000);
+   Sleep(1*500);
    Send(ClipGet());
 EndFunc
 Func init()
