@@ -82,16 +82,20 @@ Func WriteTransferMoney()
 	  ;_ArrayDisplay($aResult, "Results from the query");
 	  ;ConsoleWrite(UBound($aResult) & @CRLF);
    Until (UBound($aResult) == 2) ; waiting for the game to flush db after entering transfer money screen.. sometimes it takes a few seconds.
+   ConsoleWrite("$connectedIp: " & $connectedIp & @CRLF);
    ;_ArrayDisplay($aResult, "Results from the query")
    ;_ArrayDisplay($aResult, "Results from the query");
    local $playerAccountNumber=$aResult[1][0];
+   ConsoleWrite("playerAccountNumber: " & $playerAccountNumber & @CRLF)
    ;ConsoleWrite($playerAccount  & @CRLF );
    e_SQLite_GetTable2d($db, 'SELECT bankaccount.balance FROM bankaccount WHERE bankaccount.accountnumber=(SELECT remote.security_name FROM remote)',$aResult, $iRows, $iColumns) ;
    ;_ArrayDisplay($aResult, "Results from the query");
    Local $connectedAccountBalance=$aResult[1][0];
+   ConsoleWrite("connectedAccountBalance: " & $connectedAccountBalance & @CRLF);
    e_SQLite_GetTable2d($db, 'SELECT remote.security_name FROM remote WHERE id=1',$aResult, $iRows, $iColumns) ;
    Local $connectedAccountNumber=$aResult[1][0];
-   Send(_StringRepeat("{BACKSPACE}",33) & $connectedAccountNumber &  "{tab}" & $connectedIp & "{tab}" & $playerAccountNumber & "{tab}" & $connectedAccountBalance);
+   ConsoleWrite("connectedAccountNumber: " & $connectedAccountNumber & @CRLF);
+   Send(_StringRepeat("{BACKSPACE}",30) & $connectedIp & "{tab}" & $playerAccountNumber & "{tab}" & $connectedAccountBalance);
 ; get current connected bank account number: SELECT remote.security_name WHERE id=1
 
 ; get balance of current connected bank account: SELECT bankaccount.balance FROM bankaccount WHERE bankaccount.accountnumber=(SELECT remote.security_name FROM remote)
